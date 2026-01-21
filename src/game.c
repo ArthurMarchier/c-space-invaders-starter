@@ -94,7 +94,7 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
         SDL_RenderFillRect(renderer, &bullet_rect);
     }
 
-    for(i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne){
+    for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
         if(horde->existence[i]){
             SDL_Rect enemy_rect = {
             (int)player->x, (int)player->y,
@@ -120,28 +120,28 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 
 void update_horde(Horde *horde, bool *running, float dt){
     if(horde->y[0]+horde->v*dt>85){
-        float New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        if(New_x=NULL){
+        float *New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
+        if(New_x==NULL){
             printf("Probleme dans la redifinition de la horde");
             return NULL;
         }
-        float New_y=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))sizeof(float));
-        if(New_y=NULL){
+        float *New_y=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
+        if(New_y==NULL){
             printf("Probleme dans la redifinition de la horde");
             return NULL;
         }
-        bool New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))sizeof(bool));
-        if(New_existence=NULL){
+        bool New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(bool));
+        if(New_existence==NULL){
             printf("Probleme dans la redifinition de la horde");
             return NULL;
         }
         horde->Nbr_de_lignes+=1;
-        for(i=0,i<horde->Nbr_par_lignes,i++){
+        for(int i=0;i<horde->Nbr_par_lignes;i++){
             New_x[i]=horde->x[i];
             New_y[i]=15;
             New_existence[i]=true;
         }
-        for(i=horde->Nbr_par_lignes,i<Nbr_par_ligne*horde->Nbr_de_lignes,i++){
+        for(int i=horde->Nbr_par_lignes,i<Nbr_par_ligne*horde->Nbr_de_lignes,i++){
             New_x[i]=horde->x[i-Nbr_par_ligne];
             New_y[i]=horde->y[i-Nbr_par_ligne]+dt*horde->v;
             New_existence[i]=horde->existence[i-Nbr_par_ligne];
@@ -154,7 +154,7 @@ void update_horde(Horde *horde, bool *running, float dt){
         horde->existence=New_existence;
     }
     else{
-        for(i=0;i<Nbr_de_ligne*Nbr_par_ligne;i++){
+        for(int i=0;i<Nbr_de_ligne*Nbr_par_ligne;i++){
             horde->y[i] += horde->v * dt;
         }
     }
@@ -184,7 +184,7 @@ Horde initial_horde(){
     horde->v=ENEMIES_SPEED;
     horde->w=ENEMIES_WIDTH;
     horde->h=ENEMIES_HEIGHT;
-    for(i=0;i<horde->Nbr_par_ligne){
+    for(int i=0;i<horde->Nbr_par_ligne){
         horde->x[i]=100*(i+1);
         horde->y[i]=15;
         horde->existence[i]=true;

@@ -31,5 +31,6 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 void update_horde(Horde *horde, bool *running, float dt);
 Horde initial_horde();
+void free_horde(Horde* horde);
 
 #endif

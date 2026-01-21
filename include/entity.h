@@ -10,8 +10,8 @@ typedef struct
 
 typedef struct
 {   
-    int Nbre_par_ligne;
-    int Nbre_de_lignes;
+    int Nbr_par_ligne;
+    int Nbr_de_lignes;
     float *x; //Liste des positions en x
     float *y; //Tableau des positions en y
     float v;
