@@ -26,14 +26,8 @@ int main(void)
 
     Entity bullet = {0};
     bool bullet_active = false;
-    
-    Horde *horde=malloc(sizeof(Horde));
-    Xhorde=malloc(sizeof(float)*ENEMIES_ON_LINE);
-    Yhorde=malloc(sizeof(float)*ENEMIES_ON_LINE);
-    Existencehorde=malloc(sizeof(bool)*ENEMIES_ON_LINE);
-    horde->Nbr_de_lignes=1
-    horde->Nbr_par_ligne=ENEMIES_ON_LINE
-    horde
+
+    Horde *horde=initial_horde();
 
     while (running)
     {
@@ -47,7 +41,7 @@ int main(void)
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         update(&player, &bullet, &bullet_active, dt);
-        render(renderer, &player, &bullet, bullet_active);
+        render(renderer, &player, &bullet, &horde, bullet_active);
     }
 
     cleanup(window, renderer);

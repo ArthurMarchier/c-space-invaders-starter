@@ -160,3 +160,41 @@ void update_horde(Horde *horde, bool *running, float dt){
     }
 
 }
+
+Horde initial_horde(){
+    Horde *horde=malloc(sizeof(Horde));
+    if(horde==NULL) return NULL;
+    horde->x=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    if(horde->x==NULL){
+        free(horde);
+        return NULL;
+    }
+    horde->y=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    if(horde->y==NULL){
+        free(horde);
+        return NULL;
+    }
+    horde->existence=malloc(sizeof(bool)*ENEMIES_ON_LINE);
+    if(horde->existence==NULL){
+        free(horde);
+        return NULL;
+    }
+    horde->Nbr_de_lignes=1;
+    horde->Nbr_par_ligne=ENEMIES_ON_LINE;
+    horde->v=ENEMIES_SPEED;
+    horde->w=ENEMIES_WIDTH;
+    horde->h=ENEMIES_HEIGHT;
+    for(i=0;i<horde->Nbr_par_ligne){
+        horde->x[i]=100*(i+1);
+        horde->y[i]=15;
+        horde->existence[i]=true;
+    }
+    return horde;
+}
+
+void free_horde(Horde* horde){
+    free(horde->x);
+    free(horde->y);
+    free(horde->existence);
+    free(horde);
+}
