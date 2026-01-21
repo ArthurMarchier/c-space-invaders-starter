@@ -74,7 +74,7 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
     }
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, bool bullet_active)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active)
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -94,7 +94,18 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, bool bullet_
         SDL_RenderFillRect(renderer, &bullet_rect);
     }
 
+    for(i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne){
+        if(horde->existence[i]){
+            SDL_Rect enemy_rect = {
+            (int)player->x, (int)player->y,
+            player->w, player->h};
+            SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
+            SDL_RenderFillRect(renderer, &enemy_rect);
+        }
+    }
+
     SDL_RenderPresent(renderer);
+
 }
 
 void cleanup(SDL_Window *window, SDL_Renderer *renderer)
@@ -104,4 +115,48 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
     if (window)
         SDL_DestroyWindow(window);
     SDL_Quit();
+}
+
+
+void update_horde(Horde *horde, bool *running, float dt){
+    if(horde->y[0]+horde->v*dt>85){
+        float New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
+        if(New_x=NULL){
+            printf("Probleme dans la redifinition de la horde");
+            return NULL;
+        }
+        float New_y=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))sizeof(float));
+        if(New_y=NULL){
+            printf("Probleme dans la redifinition de la horde");
+            return NULL;
+        }
+        bool New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))sizeof(bool));
+        if(New_existence=NULL){
+            printf("Probleme dans la redifinition de la horde");
+            return NULL;
+        }
+        horde->Nbr_de_lignes+=1;
+        for(i=0,i<horde->Nbr_par_lignes,i++){
+            New_x[i]=horde->x[i];
+            New_y[i]=15;
+            New_existence[i]=true;
+        }
+        for(i=horde->Nbr_par_lignes,i<Nbr_par_ligne*horde->Nbr_de_lignes,i++){
+            New_x[i]=horde->x[i-Nbr_par_ligne];
+            New_y[i]=horde->y[i-Nbr_par_ligne]+dt*horde->v;
+            New_existence[i]=horde->existence[i-Nbr_par_ligne];
+        }
+        free(horde->x);
+        free(horde->y);
+        free(horde->existence);
+        horde->x=New_x;
+        horde->y=New_y;
+        horde->existence=New_existence;
+    }
+    else{
+        for(i=0;i<Nbr_de_ligne*Nbr_par_ligne;i++){
+            horde->y[i] += horde->v * dt;
+        }
+    }
+
 }

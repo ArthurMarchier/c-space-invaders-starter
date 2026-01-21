@@ -26,6 +26,14 @@ int main(void)
 
     Entity bullet = {0};
     bool bullet_active = false;
+    
+    Horde *horde=malloc(sizeof(Horde));
+    Xhorde=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    Yhorde=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    Existencehorde=malloc(sizeof(bool)*ENEMIES_ON_LINE);
+    horde->Nbr_de_lignes=1
+    horde->Nbr_par_ligne=ENEMIES_ON_LINE
+    horde
 
     while (running)
     {
