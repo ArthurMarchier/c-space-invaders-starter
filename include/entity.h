@@ -16,7 +16,7 @@ typedef struct
     float *y; //Tableau des positions en y
     float v;
     int w, h;
-    bool *existence; //Détecte si l'ennemi est vivant ou non
+    int *existence; //Détecte si l'ennemi est vivant (1) ou non (0)
 } Horde;
 
 #endif

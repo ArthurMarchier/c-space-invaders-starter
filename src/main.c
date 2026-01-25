@@ -40,8 +40,10 @@ int main(void)
         SDL_PumpEvents();
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
+        detect_collision_enemy(&bullet, horde, &bullet_active);
         update(&player, &bullet, &bullet_active, dt);
-        render(renderer, &player, &bullet, &horde, bullet_active);
+        update_horde(horde, &running, dt);
+        render(renderer, &player, &bullet, horde, bullet_active);
     }
 
     cleanup(window, renderer);

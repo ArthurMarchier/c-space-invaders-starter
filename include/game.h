@@ -30,7 +30,8 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt);
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 void update_horde(Horde *horde, bool *running, float dt);
-Horde initial_horde();
+Horde* initial_horde();
 void free_horde(Horde* horde);
+void detect_collision_enemy(Entity *bullet, Horde *horde, bool bullet_active);
 
 #endif

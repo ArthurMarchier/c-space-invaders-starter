@@ -2,6 +2,7 @@
 #include "game.h"
 #include <stdio.h>
 
+
 bool init(SDL_Window **window, SDL_Renderer **renderer)
 {
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
@@ -74,6 +75,19 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
     }
 }
 
+void detect_collision_enemy(Entity *bullet, Horde *horde, bool bullet_active){
+    int i=0;
+    while(i<horde->Nbr_de_lignes*horde->Nbr_par_ligne && bullet_active){
+        if(horde->existence[i]==1 && horde->y[i]<=bullet->y<=horde->y[i]+horde->h && horde->x[i]<=bullet->x<=horde->x[i]+horde->w){
+            horde->existence[i]=0;
+            bullet_active=0;
+        }
+    }
+    i+=1;
+}
+
+
+
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active)
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
@@ -95,10 +109,10 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
     }
 
     for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-        if(horde->existence[i]){
+        if(horde->existence[i]==1){
             SDL_Rect enemy_rect = {
-            (int)player->x, (int)player->y,
-            player->w, player->h};
+            (int)horde->x[i], (int)horde->y[i],
+            horde->w, horde->h};
             SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
             SDL_RenderFillRect(renderer, &enemy_rect);
         }
@@ -121,30 +135,30 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 void update_horde(Horde *horde, bool *running, float dt){
     if(horde->y[0]+horde->v*dt>85){
         float *New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        if(New_x==NULL){
-            printf("Probleme dans la redifinition de la horde");
-            return NULL;
-        }
+        // if(New_x==NULL){
+        //     printf("Probleme dans la redifinition de la horde");
+        //     return NULL;
+        // }
         float *New_y=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        if(New_y==NULL){
-            printf("Probleme dans la redifinition de la horde");
-            return NULL;
-        }
-        bool New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(bool));
-        if(New_existence==NULL){
-            printf("Probleme dans la redifinition de la horde");
-            return NULL;
-        }
+        // if(New_y==NULL){
+        //     printf("Probleme dans la redifinition de la horde");
+        //     return NULL;
+        // }
+        int *New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(int));
+        // if(New_existence==nullptr){
+        //     printf("Probleme dans la redifinition de la horde");
+        //     return NULL;
+        // }
         horde->Nbr_de_lignes+=1;
-        for(int i=0;i<horde->Nbr_par_lignes;i++){
+        for(int i=0;i<horde->Nbr_par_ligne;i++){
             New_x[i]=horde->x[i];
             New_y[i]=15;
-            New_existence[i]=true;
+            New_existence[i]=1;
         }
-        for(int i=horde->Nbr_par_lignes,i<Nbr_par_ligne*horde->Nbr_de_lignes,i++){
-            New_x[i]=horde->x[i-Nbr_par_ligne];
-            New_y[i]=horde->y[i-Nbr_par_ligne]+dt*horde->v;
-            New_existence[i]=horde->existence[i-Nbr_par_ligne];
+        for(int i=horde->Nbr_par_ligne;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
+            New_x[i]=horde->x[i-horde->Nbr_par_ligne];
+            New_y[i]=horde->y[i-horde->Nbr_par_ligne]+dt*horde->v;
+            New_existence[i]=horde->existence[i-horde->Nbr_par_ligne];
         }
         free(horde->x);
         free(horde->y);
@@ -154,40 +168,40 @@ void update_horde(Horde *horde, bool *running, float dt){
         horde->existence=New_existence;
     }
     else{
-        for(int i=0;i<Nbr_de_ligne*Nbr_par_ligne;i++){
+        for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
             horde->y[i] += horde->v * dt;
         }
     }
 
 }
 
-Horde initial_horde(){
+Horde* initial_horde(){
     Horde *horde=malloc(sizeof(Horde));
-    if(horde==NULL) return NULL;
+    // if(horde==NULL) return NULL;
     horde->x=malloc(sizeof(float)*ENEMIES_ON_LINE);
-    if(horde->x==NULL){
-        free(horde);
-        return NULL;
-    }
+    // if(horde->x==NULL){
+    //     free(horde);
+    //     return NULL;
+    // }
     horde->y=malloc(sizeof(float)*ENEMIES_ON_LINE);
-    if(horde->y==NULL){
-        free(horde);
-        return NULL;
-    }
-    horde->existence=malloc(sizeof(bool)*ENEMIES_ON_LINE);
-    if(horde->existence==NULL){
-        free(horde);
-        return NULL;
-    }
+    // if(horde->y==NULL){
+    //     free(horde);
+    //     return NULL;
+    // }
+    horde->existence=malloc(sizeof(int)*ENEMIES_ON_LINE);
+    // if(horde->existence==NULL){
+    //     free(horde);
+    //     return NULL;
+    // }
     horde->Nbr_de_lignes=1;
     horde->Nbr_par_ligne=ENEMIES_ON_LINE;
     horde->v=ENEMIES_SPEED;
     horde->w=ENEMIES_WIDTH;
     horde->h=ENEMIES_HEIGHT;
-    for(int i=0;i<horde->Nbr_par_ligne){
-        horde->x[i]=100*(i+1);
+    for(int i=0;i<horde->Nbr_par_ligne;i++){
+        horde->x[i]=100*(i+1)+horde->w;
         horde->y[i]=15;
-        horde->existence[i]=true;
+        horde->existence[i]=1;
     }
     return horde;
 }
