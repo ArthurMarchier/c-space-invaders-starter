@@ -75,18 +75,16 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
     }
 }
 
-void detect_collision_enemy(Entity *bullet, Horde *horde, bool bullet_active){
+void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active){
     int i=0;
-    while(i<horde->Nbr_de_lignes*horde->Nbr_par_ligne && bullet_active){
-        if(horde->existence[i]==1 && horde->y[i]<=bullet->y<=horde->y[i]+horde->h && horde->x[i]<=bullet->x<=horde->x[i]+horde->w){
+    while(i<horde->Nbr_de_lignes*horde->Nbr_par_ligne && *bullet_active){
+        if(horde->existence[i]==1 && (horde->y[i]<=bullet->y) && bullet->y<=horde->y[i]+horde->h && horde->x[i]<=bullet->x && bullet->x<=horde->x[i]+horde->w){
             horde->existence[i]=0;
-            bullet_active=0;
+            *bullet_active=false;
         }
+        i++;
     }
-    i+=1;
 }
-
-
 
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active)
 {
@@ -132,8 +130,8 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 }
 
 
-void update_horde(Horde *horde, bool *running, float dt){
-    if(horde->y[0]+horde->v*dt>85){
+void update_horde(Horde *horde, float dt){
+    if(horde->y[0]+horde->v*dt>DISTANCE_ENTRE_ENNEMIS_Y+horde->h){
         float *New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
         // if(New_x==NULL){
         //     printf("Probleme dans la redifinition de la horde");
@@ -152,7 +150,7 @@ void update_horde(Horde *horde, bool *running, float dt){
         horde->Nbr_de_lignes+=1;
         for(int i=0;i<horde->Nbr_par_ligne;i++){
             New_x[i]=horde->x[i];
-            New_y[i]=15;
+            New_y[i]=0;
             New_existence[i]=1;
         }
         for(int i=horde->Nbr_par_ligne;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
@@ -172,7 +170,6 @@ void update_horde(Horde *horde, bool *running, float dt){
             horde->y[i] += horde->v * dt;
         }
     }
-
 }
 
 Horde* initial_horde(){
@@ -199,11 +196,22 @@ Horde* initial_horde(){
     horde->w=ENEMIES_WIDTH;
     horde->h=ENEMIES_HEIGHT;
     for(int i=0;i<horde->Nbr_par_ligne;i++){
-        horde->x[i]=100*(i+1)+horde->w;
-        horde->y[i]=15;
+        horde->x[i]=150+i*(DISTANCE_ENTRE_ENNEMIS_X+horde->w);
+        horde->y[i]=0;
         horde->existence[i]=1;
     }
     return horde;
+}
+
+void defeat(Horde *horde, Entity *player, bool *running){
+    int i=horde->Nbr_par_ligne*horde->Nbr_de_lignes-1;
+    while(horde->y[i]-horde->h>=player->y){
+        if(horde->existence[i]==1){
+            *running=false;
+            printf("You lose");
+        }
+        i=i-1;
+    }
 }
 
 void free_horde(Horde* horde){

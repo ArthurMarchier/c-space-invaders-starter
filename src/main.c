@@ -42,7 +42,8 @@ int main(void)
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         detect_collision_enemy(&bullet, horde, &bullet_active);
         update(&player, &bullet, &bullet_active, dt);
-        update_horde(horde, &running, dt);
+        update_horde(horde, dt);
+        defeat(horde, &player, &running);
         render(renderer, &player, &bullet, horde, bullet_active);
     }
 
