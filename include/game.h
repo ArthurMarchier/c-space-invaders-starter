@@ -3,6 +3,7 @@
 
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+//#include <SDL2/SDL_ttf.h>
 #include "entity.h"
 
 #define SCREEN_WIDTH 800
@@ -26,13 +27,14 @@
 
 bool init(SDL_Window **window, SDL_Renderer **renderer);
 void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bullet, bool *bullet_active);
-void update(Entity *player, Entity *bullet, bool *bullet_active, float dt);
+void update(Entity *player, Entity *bullet, Entity *bullet_enemy, bool *bullet_enemy_active, bool *bullet_active, float dt);
 void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active);
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active);
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, Entity *bullet_enemy, bool bullet_active, bool bullet_enemy_active);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
 void update_horde(Horde *horde, float time, float dt);
 Horde* initial_horde();
 void defeat(Horde *horde, Entity *player, bool *running);
+void attack_horde(Horde *horde, Entity *player, Entity *bullet_enemy, bool *bullet_enemy_active, bool *running);
 void free_horde(Horde* horde);
 
 #endif

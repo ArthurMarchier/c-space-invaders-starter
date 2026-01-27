@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
+//#include <SDL_ttf.h>
 #include "entity.h"
 #include "game.h"
 
@@ -27,6 +28,9 @@ int main(void)
     Entity bullet = {0};
     bool bullet_active = false;
 
+    Entity bullet_enemy = {0};
+    bool bullet_enemy_active = false;
+
     Horde *horde=initial_horde();
     
     float time=0;
@@ -44,10 +48,11 @@ int main(void)
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         detect_collision_enemy(&bullet, horde, &bullet_active);
-        update(&player, &bullet, &bullet_active, dt);
+        update(&player, &bullet, &bullet_enemy, &bullet_enemy_active, &bullet_active, dt);
         update_horde(horde, time, dt);
+        attack_horde(horde, &player, &bullet_enemy, &bullet_enemy_active, &running);
         defeat(horde, &player, &running);
-        render(renderer, &player, &bullet, horde, bullet_active);
+        render(renderer, &player, &bullet, horde, &bullet_enemy, bullet_active, bullet_enemy_active);
     }
 
     free_horde(horde);

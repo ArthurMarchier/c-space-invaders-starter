@@ -2,7 +2,9 @@
 #include "game.h"
 #include <stdio.h>
 #include <math.h>
+#include <time.h>
 #include <assert.h>
+//#include <SDL_ttf.h>
 
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
@@ -60,7 +62,7 @@ void handle_input(bool *running, const Uint8 *keys, Entity *player, Entity *bull
     }
 }
 
-void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
+void update(Entity *player, Entity *bullet, Entity *bullet_enemy, bool *bullet_enemy_active, bool *bullet_active, float dt)
 {
     player->x += player->vx * dt;
 
@@ -73,6 +75,12 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt)
     {
         bullet->y += bullet->vy * dt;
         if (bullet->y + bullet->h < 0)
+            *bullet_active = false;
+    }
+
+    if(*bullet_enemy_active){
+        bullet_enemy->y += bullet_enemy->vy * dt;
+        if (bullet_enemy->y > SCREEN_HEIGHT)
             *bullet_active = false;
     }
 }
@@ -88,7 +96,7 @@ void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active){
     }
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, Entity *bullet_enemy, bool bullet_active, bool bullet_enemy_active)
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -106,6 +114,15 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
             bullet->w, bullet->h};
         SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
         SDL_RenderFillRect(renderer, &bullet_rect);
+    }
+
+    if (bullet_enemy_active)
+    {
+        SDL_Rect bullet_enemy_rect = {
+            (int)bullet_enemy->x, (int)bullet_enemy->y,
+            bullet_enemy->w, bullet_enemy->h};
+        SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+        SDL_RenderFillRect(renderer, &bullet_enemy_rect);
     }
 
     for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
@@ -133,44 +150,32 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 
 
 void update_horde(Horde *horde, float time, float dt){
-    if(horde->y[0]+ dt*(0.2+0.8*time/(time+20))*horde->v>DISTANCE_ENTRE_ENNEMIS_Y+horde->h){
-        float *New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        // if(New_x==NULL){
+    for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
+        horde->y[i] += dt*(0.2+0.8*time/(time+20))*horde->v;
+    }
+    if(horde->y[horde->Nbr_par_ligne*horde->Nbr_de_lignes-1]>DISTANCE_ENTRE_ENNEMIS_Y+horde->h && horde->Nbr_de_lignes<=20){
+        horde->x=realloc(horde->x,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
+        // if(horde->x==NULL){
         //     printf("Probleme dans la redifinition de la horde");
         //     return NULL;
         // }
-        float *New_y=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        // if(New_y==NULL){
+        horde->y=realloc(horde->y,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
+        //  if(horde->y==NULL){
         //     printf("Probleme dans la redifinition de la horde");
         //     return NULL;
         // }
-        int *New_existence=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(int));
-        // if(New_existence==nullptr){
+        horde->existence=realloc(horde->existence,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(int));
+        // if(horde->existence==nullptr){
         //     printf("Probleme dans la redifinition de la horde");
         //     return NULL;
         // }
         horde->Nbr_de_lignes+=1;
-        for(int i=0;i<horde->Nbr_par_ligne;i++){
-            New_x[i]=horde->x[i];
-            New_y[i]=0;
-            New_existence[i]=1;
+        for(int i=horde->Nbr_par_ligne*(horde->Nbr_de_lignes-1);i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
+            horde->x[i]=150+(i-horde->Nbr_par_ligne*(horde->Nbr_de_lignes-1))*(DISTANCE_ENTRE_ENNEMIS_X+horde->w);
+            horde->y[i]=0;
+            horde->existence[i]=1;
         }
-        for(int i=horde->Nbr_par_ligne;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
-            New_x[i]=horde->x[i-horde->Nbr_par_ligne];
-            New_y[i]=horde->y[i-horde->Nbr_par_ligne]+ dt*(0.2+0.8*time/(time+20))*horde->v;
-            New_existence[i]=horde->existence[i-horde->Nbr_par_ligne];
-        }
-        free(horde->x);
-        free(horde->y);
-        free(horde->existence);
-        horde->x=New_x;
-        horde->y=New_y;
-        horde->existence=New_existence;
-    }
-    else{
-        for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-            horde->y[i] += dt*(0.2+0.8*time/(time+20))*horde->v;
-        }
+    
     }
 }
 
@@ -207,13 +212,34 @@ Horde* initial_horde(){
 }
 
 void defeat(Horde *horde, Entity *player, bool *running){
-    int i=horde->Nbr_par_ligne*horde->Nbr_de_lignes-1;
+    int i=0;
     while(horde->y[i]+horde->h>=player->y && *running){
         if(horde->existence[i]==1){
             *running=false;
             printf("You lose");
         }
-        i=i-1;
+        i+=1;
+    }
+}
+
+void attack_horde(Horde *horde, Entity *player, Entity *bullet_enemy, bool *bullet_enemy_active, bool *running){
+    if(*bullet_enemy_active && (player->y<=bullet_enemy->y) && (bullet_enemy->y<=player->y+player->h) && (player->x<=bullet_enemy->x) && (bullet_enemy->x<=player->x+player->w)){
+        *running=false;
+        printf("You lose");
+    }
+    else if(!bullet_enemy_active){
+        srand(time(NULL));
+        int nbr=rand()%4+0;    //entre 0-4
+        if(nbr==0){
+            srand(time(NULL));
+            int indice_enemy=rand()%(horde->Nbr_de_lignes*horde->Nbr_par_ligne-1)+0;
+            *bullet_enemy_active = true;
+            bullet_enemy->x = horde->x[indice_enemy] + horde->w / 2 - BULLET_WIDTH / 2;
+            bullet_enemy->y = horde->y[indice_enemy]+horde->h;
+            bullet_enemy->w = BULLET_WIDTH;
+            bullet_enemy->h = BULLET_HEIGHT;
+            bullet_enemy->vy = BULLET_SPEED;
+        }
     }
 }
 
