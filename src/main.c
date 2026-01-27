@@ -29,6 +29,8 @@ int main(void)
 
     Horde *horde=initial_horde();
 
+    float time=0;
+
     while (running)
     {
         Uint32 ticks = SDL_GetTicks();
@@ -36,17 +38,19 @@ int main(void)
         if (dt > 0.05f)
             dt = 0.05f;
         last_ticks = ticks;
+        time+=dt;
 
         SDL_PumpEvents();
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         detect_collision_enemy(&bullet, horde, &bullet_active);
         update(&player, &bullet, &bullet_active, dt);
-        update_horde(horde, dt);
+        update_horde(horde, time, dt);
         defeat(horde, &player, &running);
         render(renderer, &player, &bullet, horde, bullet_active);
     }
 
+    free_horde(horde);
     cleanup(window, renderer);
     return 0;
 }

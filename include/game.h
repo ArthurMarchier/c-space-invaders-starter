@@ -17,7 +17,7 @@
 #define BULLET_SPEED 600.0f
 
 #define ENEMIES_ON_LINE 5
-#define ENEMIES_SPEED 20.0f
+#define ENEMIES_SPEED_MAX 130.0f
 #define DISTANCE_ENTRE_ENNEMIS_X 50
 #define DISTANCE_ENTRE_ENNEMIS_Y 30
 #define ENEMIES_WIDTH 50
@@ -30,7 +30,7 @@ void update(Entity *player, Entity *bullet, bool *bullet_active, float dt);
 void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active);
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, bool bullet_active);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
-void update_horde(Horde *horde, float dt);
+void update_horde(Horde *horde, float time, float dt);
 Horde* initial_horde();
 void defeat(Horde *horde, Entity *player, bool *running);
 void free_horde(Horde* horde);
