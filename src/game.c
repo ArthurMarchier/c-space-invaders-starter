@@ -205,7 +205,7 @@ Horde* initial_horde(){
 
 void defeat(Horde *horde, Entity *player, bool *running){
     int i=horde->Nbr_par_ligne*horde->Nbr_de_lignes-1;
-    while(horde->y[i]-horde->h>=player->y){
+    while(horde->y[i]+horde->h>=player->y && *running){
         if(horde->existence[i]==1){
             *running=false;
             printf("You lose");
