@@ -28,7 +28,7 @@ int main(void)
     bool bullet_active = false;
 
     Horde *horde=initial_horde();
-
+    
     float time=0;
 
     while (running)

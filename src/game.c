@@ -2,6 +2,7 @@
 #include "game.h"
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
@@ -132,7 +133,7 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 
 
 void update_horde(Horde *horde, float time, float dt){
-    if(horde->y[0]+ dt*horde->v>DISTANCE_ENTRE_ENNEMIS_Y+horde->h){
+    if(horde->y[0]+ dt*(0.2+0.8*time/(time+20))*horde->v>DISTANCE_ENTRE_ENNEMIS_Y+horde->h){
         float *New_x=malloc((horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
         // if(New_x==NULL){
         //     printf("Probleme dans la redifinition de la horde");
@@ -156,7 +157,7 @@ void update_horde(Horde *horde, float time, float dt){
         }
         for(int i=horde->Nbr_par_ligne;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
             New_x[i]=horde->x[i-horde->Nbr_par_ligne];
-            New_y[i]=horde->y[i-horde->Nbr_par_ligne]+ dt*horde->v;
+            New_y[i]=horde->y[i-horde->Nbr_par_ligne]+ dt*(0.2+0.8*time/(time+20))*horde->v;
             New_existence[i]=horde->existence[i-horde->Nbr_par_ligne];
         }
         free(horde->x);
@@ -168,7 +169,7 @@ void update_horde(Horde *horde, float time, float dt){
     }
     else{
         for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-            horde->y[i] += dt*horde->v;
+            horde->y[i] += dt*(0.2+0.8*time/(time+20))*horde->v;
         }
     }
 }
@@ -194,6 +195,7 @@ Horde* initial_horde(){
     horde->Nbr_de_lignes=1;
     horde->Nbr_par_ligne=ENEMIES_ON_LINE;
     horde->v=ENEMIES_SPEED_MAX;
+    assert(horde->v==50);
     horde->w=ENEMIES_WIDTH;
     horde->h=ENEMIES_HEIGHT;
     for(int i=0;i<horde->Nbr_par_ligne;i++){
