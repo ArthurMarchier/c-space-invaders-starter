@@ -1,6 +1,6 @@
 #include <SDL2/SDL.h>
 #include <stdbool.h>
-//#include <SDL_ttf.h>
+#include <SDL_ttf.h>
 #include "entity.h"
 #include "game.h"
 
@@ -31,7 +31,7 @@ int main(void)
         .w=ENEMIES_WIDTH,
         .h=ENEMIES_HEIGHT,
         .vx=SPEEDX_ENNEMI_RAPIDE,
-        .vy=SPEEDy_ENNEMI_RAPIDE};
+        .vy=SPEEDY_ENNEMI_RAPIDE};
     
     Entity bullet = {0};
     bool bullet_active = false;
@@ -39,13 +39,13 @@ int main(void)
     Entity bullet_enemy = {0};
     bool bullet_enemy_active = false;
 
-    droite=true;
+    bool droite=true;
 
     Horde *horde=initial_horde();
     
     float time=0;
     
-    int vies=0;
+    int vies=3;
     int cote_fast=0;
     bool fast_actif=false;
     bool fast_droite=true;

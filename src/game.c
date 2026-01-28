@@ -2,7 +2,7 @@
 #include "game.h"
 #include <stdio.h>
 #include <math.h>
-//#include <SDL_ttf.h>
+#include <SDL_ttf.h>
 
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
@@ -78,8 +78,8 @@ void update(Entity *player, Entity *bullet, Entity *bullet_enemy, bool *bullet_e
 
     if(*bullet_enemy_active){
         bullet_enemy->y += bullet_enemy->vy * dt;
-        if (bullet_enemy->y < SCREEN_HEIGHT)
-            *bullet_active = false;
+        if (bullet_enemy->y > SCREEN_HEIGHT)
+            *bullet_enemy_active = false;
     }
 }
 
@@ -134,11 +134,11 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
     }
 
     for(int i=0;i<vies;i++){
-        SDL_Rect enemy_rect = {
+        SDL_Rect vies_rect = {
         5+12*i, 5,
         10, 10};
-        SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
-        SDL_RenderFillRect(renderer, &enemy_rect);
+        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
+        SDL_RenderFillRect(renderer, &vies_rect);
     }
 
     SDL_RenderPresent(renderer);
@@ -156,28 +156,35 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 
 
 void update_horde(Horde *horde, float time, float dt, bool *droite){
+    bool newline=false;
     if(*droite){
-        horde->x[i]+=dt*(0.2+0.8*time/(time+20))*horde->v;
-        if(horde->x[i]+horde->w>=SCREEN_WIDTH-50){
+        for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
+            horde->x[i]+=dt*(0.2+0.8*time/(time+20))*horde->v;
+        }
+        if(horde->x[horde->Nbr_par_ligne-1]+horde->w>=SCREEN_WIDTH-50){
             *droite=false;
             for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-                horde->y[i] += 10;
+                horde->y[i] += DISTANCE_ENTRE_ENNEMIS_Y+horde->h;
+                newline=true;
             }
         }
     }
     if(!*droite){
-        horde->x[i]-=dt*(0.2+0.8*time/(time+20))*horde->v;
-        if(horde->x[i]<=50){
+        for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
+            horde->x[i]-=dt*(0.2+0.8*time/(time+20))*horde->v;
+        }
+        if(horde->x[0]<=50){
             *droite=true;
             for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-                horde->y[i] += 10;
+                horde->y[i] += DISTANCE_ENTRE_ENNEMIS_Y+horde->h;
+                newline=true;
             }
         }
     }
-    for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-        horde->y[i] += dt*(0.2+0.8*time/(time+20))*horde->v;
-    }
-    if(horde->y[horde->Nbr_par_ligne*horde->Nbr_de_lignes-1]>DISTANCE_ENTRE_ENNEMIS_Y+horde->h && horde->Nbr_de_lignes<=20){
+    // for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
+    //     horde->y[i]+=dt*(0.2+0.8*time/(time+20))*horde->v;
+    //}
+    if(newline && horde->Nbr_de_lignes<=20){
         horde->x=realloc(horde->x,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
         // if(horde->x==NULL){
         //     printf("Probleme dans la redifinition de la horde");
@@ -195,7 +202,7 @@ void update_horde(Horde *horde, float time, float dt, bool *droite){
         // }
         horde->Nbr_de_lignes+=1;
         for(int i=horde->Nbr_par_ligne*(horde->Nbr_de_lignes-1);i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
-            horde->x[i]=horde->x[i-Nbr_par_lignes];
+            horde->x[i]=horde->x[i-horde->Nbr_par_ligne];
             horde->y[i]=0;
             horde->existence[i]=1;
         }
@@ -205,36 +212,36 @@ void update_horde(Horde *horde, float time, float dt, bool *droite){
 
 Horde* initial_horde(){
     Horde *horde=malloc(sizeof(Horde));
+    horde->Nbr_de_lignes=8;
     // if(horde==NULL) return NULL;
-    horde->x=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    horde->x=malloc(sizeof(float)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
     // if(horde->x==NULL){
     //     free(horde);
     //     return NULL;
     // }
-    horde->y=malloc(sizeof(float)*ENEMIES_ON_LINE);
+    horde->y=malloc(sizeof(float)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
     // if(horde->y==NULL){
     //     free(horde);
     //     return NULL;
     // }
-    horde->existence=malloc(sizeof(int)*ENEMIES_ON_LINE);
+    horde->existence=malloc(sizeof(int)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
     // if(horde->existence==NULL){
     //     free(horde);
     //     return NULL;
     // }
-    horde->Nbr_de_lignes=1;
     horde->Nbr_par_ligne=ENEMIES_ON_LINE;
     horde->v=ENEMIES_SPEED_MAX;
     horde->w=ENEMIES_WIDTH;
     horde->h=ENEMIES_HEIGHT;
-    for(int i=0;i<horde->Nbr_par_ligne;i++){
-        horde->x[i]=50+i*(DISTANCE_ENTRE_ENNEMIS_X+horde->w);
-        horde->y[i]=0;
+    for(int i=0;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
+        horde->x[i]=50+(i%horde->Nbr_par_ligne)*(DISTANCE_ENTRE_ENNEMIS_X+horde->w);
+        horde->y[i]=(DISTANCE_ENTRE_ENNEMIS_Y+horde->h)*(horde->Nbr_de_lignes-1)-(i/horde->Nbr_par_ligne)*(DISTANCE_ENTRE_ENNEMIS_Y+horde->h);
         horde->existence[i]=1;
     }
     return horde;
 }
 
-void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fast_droite, bool *bullet_active, Entity bullet){
+void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fast_droite, bool *bullet_active, Entity *bullet, float dt){
     if(*fast_actif){
         fast->y+=dt*fast->vy;
         if(*fast_droite){
@@ -243,9 +250,9 @@ void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fas
         else{
             fast->x+=dt*fast->vx;
         }
-        cote_fast+=1;
-        if(cote_fast==20){
-            cote_fast=0
+        *cote_fast+=1;
+        if(*cote_fast==20){
+            *cote_fast=0;
             if(*fast_droite){
                 *fast_droite=false;
             }
@@ -283,20 +290,21 @@ void defeat(Horde *horde, Entity *player, bool *running, int vies){
 }
 
 void attack_horde(Horde *horde, Entity *player, Entity *bullet_enemy, bool *bullet_enemy_active, int *vies){
-    if(*bullet_enemy_active && !*immunité && (player->y<=bullet_enemy->y) && (bullet_enemy->y<=player->y+player->h) && (player->x<=bullet_enemy->x) && (bullet_enemy->x<=player->x+player->w)){
-        vies=vies-1;
+    if(*bullet_enemy_active && player->y>=bullet_enemy->y && bullet_enemy->y>=player->y-player->h && player->x<=bullet_enemy->x && bullet_enemy->x<=player->x+player->w){
+        *vies=*vies-1;
+        *bullet_enemy_active=false;
     }
-    if(!bullet_enemy_active){
-        int nbr=rand()%15;
+    if(!*bullet_enemy_active){
+        int nbr=rand()%30;
         if(nbr==0){
-            int indice_enemy=rand()%(horde->Nbr_de_lignes*horde->Nbr_par_ligne);
-            if(horde->existence[indice_enemy]==1){
+            int indice_tireur=rand()%(horde->Nbr_de_lignes*horde->Nbr_par_ligne);
+            if(horde->existence[indice_tireur]!=0 && horde->y[indice_tireur]<=player->y-150){
                 *bullet_enemy_active = true;
-                bullet_enemy->x = horde->x[indice_enemy] + horde->w / 2 - BULLET_WIDTH / 2;
-                bullet_enemy->y = horde->y[indice_enemy]+horde->h;
+                bullet_enemy->x = horde->x[indice_tireur] + horde->w / 2 - BULLET_WIDTH / 2;
+                bullet_enemy->y = horde->y[indice_tireur]+horde->h;
                 bullet_enemy->w = BULLET_WIDTH;
                 bullet_enemy->h = BULLET_HEIGHT;
-                bullet_enemy->vy = BULLET_SPEED;
+                bullet_enemy->vy = BULLET_SPEED/2;
             }
         }
     }
