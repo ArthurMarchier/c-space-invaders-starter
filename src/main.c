@@ -28,11 +28,20 @@ int main(void)
     Entity fast={
         .x=0,
         .y=0,
-        .w=ENEMIES_WIDTH,
+        .w=ENEMIES_WIDTH, 
         .h=ENEMIES_HEIGHT,
         .vx=SPEEDX_ENNEMI_RAPIDE,
         .vy=SPEEDY_ENNEMI_RAPIDE};
     
+    Entity vie_tombante={
+        .x=0,
+        .y=0,
+        .w=VIE_WIDTH,
+        .h=VIE_WIDTH,
+        .vx=BULLET_SPEED*0.4,
+        .vy=BULLET_SPEED*0.4,
+    };
+
     Entity bullet = {0};
     bool bullet_active = false;
 
@@ -49,6 +58,9 @@ int main(void)
     int cote_fast=0;
     bool fast_actif=false;
     bool fast_droite=true;
+    bool vie_tombe=false;
+    int score=0;
+    bool victoire=false;
 
     while (running)
     {
@@ -61,16 +73,28 @@ int main(void)
 
         SDL_PumpEvents();
         const Uint8 *keys = SDL_GetKeyboardState(NULL);
+        render(renderer, &player, &bullet, horde, &bullet_enemy, bullet_active, bullet_enemy_active, vies, &fast, fast_actif, vie_tombe, &vie_tombante);
         handle_input(&running, keys, &player, &bullet, &bullet_active);
-        detect_collision_enemy(&bullet, horde, &bullet_active);
+        detect_collision_enemy(&bullet, horde, &bullet_active, &score);
         update(&player, &bullet, &bullet_enemy, &bullet_enemy_active, &bullet_active, dt);
         update_horde(horde, time, dt, &droite);
         attack_horde(horde, &player, &bullet_enemy, &bullet_enemy_active, &vies);
-        defeat(horde, &player, &running, vies);
-        render(renderer, &player, &bullet, horde, &bullet_enemy, bullet_active, bullet_enemy_active, vies);
+        update_fast_enemy(&fast, &fast_actif, &cote_fast, &fast_droite, &bullet_active, &bullet, dt, &vies);
+        if(vies<5)
+            vies_qui_tombent(&vies, &vie_tombante, &vie_tombe, &player, dt);
+        end_game(horde, &player, &running, vies, score, &victoire);
     }
 
     free_horde(horde);
+    float time_end=0;
+    while(time_end<5){
+        afficher_resultat(renderer, victoire);
+        SDL_RenderPresent(renderer);
+        Uint32 ticks = SDL_GetTicks();
+        float dt = (ticks - last_ticks) / 1000.0f;
+        last_ticks = ticks;
+        time_end+=dt;
+    }
     cleanup(window, renderer);
     return 0;
 }

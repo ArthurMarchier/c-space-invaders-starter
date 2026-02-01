@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <math.h>
 #include <SDL_ttf.h>
+#include <SDL_image.h>
 
 
 bool init(SDL_Window **window, SDL_Renderer **renderer)
@@ -12,6 +13,9 @@ bool init(SDL_Window **window, SDL_Renderer **renderer)
         SDL_Log("Erreur SDL_Init: %s", SDL_GetError());
         return false;
     }
+
+    if (TTF_Init() == -1)
+        return false;
 
     *window = SDL_CreateWindow("Space Invaders (SDL)", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
                                SCREEN_WIDTH, SCREEN_HEIGHT, 0);
@@ -83,18 +87,20 @@ void update(Entity *player, Entity *bullet, Entity *bullet_enemy, bool *bullet_e
     }
 }
 
-void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active){
+void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active, int *score){
     int i=0;
     while(i<horde->Nbr_de_lignes*horde->Nbr_par_ligne && *bullet_active){
-        if(horde->existence[i]==1 && (horde->y[i]<=bullet->y) && bullet->y<=horde->y[i]+horde->h && horde->x[i]<=bullet->x && bullet->x<=horde->x[i]+horde->w){
-            horde->existence[i]=0;
+        if(horde->existence[i]!=0 && (horde->y[i]<=bullet->y) && bullet->y<=horde->y[i]+horde->h && horde->x[i]<=bullet->x && bullet->x<=horde->x[i]+horde->w){
+            horde->existence[i]-=1;
             *bullet_active=false;
+            if(horde->existence[i]==0)
+                *score+=1;
         }
         i++;
     }
 }
 
-void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, Entity *bullet_enemy, bool bullet_active, bool bullet_enemy_active, float vies)
+void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, Entity *bullet_enemy, bool bullet_active, bool bullet_enemy_active, float vies, Entity *fast, bool fast_actif, bool vie_tombe, Entity *vie_tombante)
 {
     SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
@@ -123,6 +129,32 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
         SDL_RenderFillRect(renderer, &bullet_enemy_rect);
     }
 
+    if(fast_actif)
+    {
+        SDL_Rect fast_rect = {
+        (int)fast->x, (int)fast->y,
+        fast->w, fast->h};
+        SDL_SetRenderDrawColor(renderer, 0,255,255,0);
+        SDL_RenderFillRect(renderer, &fast_rect);
+    }
+
+    if(vie_tombe)
+    {
+        SDL_Surface *surface = IMG_Load("images/Design_sans_titre-removebg-preview.png");
+        if (!surface)
+            printf("Erreur IMG_Load: %s\n", IMG_GetError());
+        
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        if (!texture)
+            printf("Erreur texture: %s\n", SDL_GetError());
+
+        SDL_Rect vie_tombante_rect = {
+        (int)vie_tombante->x, (int)vie_tombante->y,
+        vie_tombante->w, vie_tombante->h};
+        SDL_RenderCopy(renderer, texture, NULL, &vie_tombante_rect);
+    }
+
     for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
         if(horde->existence[i]==1){
             SDL_Rect enemy_rect = {
@@ -131,14 +163,29 @@ void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde
             SDL_SetRenderDrawColor(renderer, 0, 0, 255, 255);
             SDL_RenderFillRect(renderer, &enemy_rect);
         }
+        else if(horde->existence[i]==2){
+            SDL_Rect enemy_rect = {
+            (int)horde->x[i], (int)horde->y[i],
+            horde->w, horde->h};
+            SDL_SetRenderDrawColor(renderer, 0, 0, 150, 150);
+            SDL_RenderFillRect(renderer, &enemy_rect);
+        }
     }
 
     for(int i=0;i<vies;i++){
+        SDL_Surface *surface = IMG_Load("images/Design_sans_titre-removebg-preview.png");
+        if (!surface)
+            printf("Erreur IMG_Load: %s\n", IMG_GetError());
+        
+        SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+        SDL_FreeSurface(surface);
+        if (!texture)
+            printf("Erreur texture: %s\n", SDL_GetError());
+
         SDL_Rect vies_rect = {
-        5+12*i, 5,
-        10, 10};
-        SDL_SetRenderDrawColor(renderer, 255, 0, 0, 255);
-        SDL_RenderFillRect(renderer, &vies_rect);
+        5+18*(i%3), 5+18*(i/3),
+        VIE_WIDTH, VIE_WIDTH};
+        SDL_RenderCopy(renderer, texture, NULL, &vies_rect);
     }
 
     SDL_RenderPresent(renderer);
@@ -184,7 +231,7 @@ void update_horde(Horde *horde, float time, float dt, bool *droite){
     // for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
     //     horde->y[i]+=dt*(0.2+0.8*time/(time+20))*horde->v;
     //}
-    if(newline && horde->Nbr_de_lignes<=20){
+    if(newline && horde->Nbr_de_lignes<NBR_DE_LIGNES_MAX_HORDE){
         horde->x=realloc(horde->x,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
         // if(horde->x==NULL){
         //     printf("Probleme dans la redifinition de la horde");
@@ -200,11 +247,15 @@ void update_horde(Horde *horde, float time, float dt, bool *droite){
         //     printf("Probleme dans la redifinition de la horde");
         //     return NULL;
         // }
+        int k=1;
         horde->Nbr_de_lignes+=1;
+        if(horde->Nbr_de_lignes%5==0){
+            k=2;
+        }
         for(int i=horde->Nbr_par_ligne*(horde->Nbr_de_lignes-1);i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
             horde->x[i]=horde->x[i-horde->Nbr_par_ligne];
             horde->y[i]=0;
-            horde->existence[i]=1;
+            horde->existence[i]=k;
         }
     
     }
@@ -236,56 +287,95 @@ Horde* initial_horde(){
     for(int i=0;i<horde->Nbr_par_ligne*horde->Nbr_de_lignes;i++){
         horde->x[i]=50+(i%horde->Nbr_par_ligne)*(DISTANCE_ENTRE_ENNEMIS_X+horde->w);
         horde->y[i]=(DISTANCE_ENTRE_ENNEMIS_Y+horde->h)*(horde->Nbr_de_lignes-1)-(i/horde->Nbr_par_ligne)*(DISTANCE_ENTRE_ENNEMIS_Y+horde->h);
-        horde->existence[i]=1;
+        if(4*horde->Nbr_par_ligne<=i && i<5*horde->Nbr_par_ligne){
+            horde->existence[i]=2;
+        }
+        else{
+            horde->existence[i]=1;
+        }
     }
     return horde;
 }
 
-void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fast_droite, bool *bullet_active, Entity *bullet, float dt){
+void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fast_droite, bool *bullet_active, Entity *bullet, float dt, int *vies){
     if(*fast_actif){
         fast->y+=dt*fast->vy;
         if(*fast_droite){
             fast->x+=dt*fast->vx;
         }
         else{
-            fast->x+=dt*fast->vx;
+            fast->x-=dt*fast->vx;
         }
         *cote_fast+=1;
-        if(*cote_fast==20){
+        if(*cote_fast==500){
             *cote_fast=0;
-            if(*fast_droite){
+            int nbr1=random()%2;
+            if(nbr1==0){
                 *fast_droite=false;
             }
             else{
                 *fast_droite=true;
             }
         }
+        if(fast->x<=0 && *fast_droite==false){
+            *fast_droite=true; //Pour ne pas qu'il sorte de l'écran
+        }
+        else if(fast->x+fast->w>=SCREEN_WIDTH && *fast_droite==true){
+            *fast_droite=false;
+        }
         if(*bullet_active && fast->y<=bullet->y && bullet->y<=fast->y+fast->h && fast->x<=bullet->x && bullet->x<=fast->x+fast->w){
             *fast_actif=false;
             *bullet_active=false;
         }
+        if(fast->y>=SCREEN_WIDTH){
+            *vies-=1;
+            *fast_actif=false;
+        }
     }
     else{
-        int nbr=rand()%15;
-        if(nbr==0){
+        int nbr2=rand()%3000;
+        if(nbr2==0){
             fast->x=rand()%(SCREEN_WIDTH-3*ENEMIES_WIDTH)+ENEMIES_WIDTH;
+            fast->y=-fast->h;
             *fast_actif=true;
         }
     }
 }
 
-void defeat(Horde *horde, Entity *player, bool *running, int vies){
+void end_game(Horde *horde, Entity *player, bool *running, int vies, int score, bool *victoire){
     if(vies==0){
         *running=false;
-        printf("You lose");
+    }
+    else if(score==horde->Nbr_par_ligne*NBR_DE_LIGNES_MAX_HORDE){
+        *running=false;
+        *victoire=true;
     }
     int i=0;
     while(horde->y[i]+horde->h>=player->y && *running){
         if(horde->existence[i]==1){
             *running=false;
-            printf("You lose");
         }
         i+=1;
+    }
+}
+
+void vies_qui_tombent(int *vies, Entity *vie_tombante, bool *vie_tombe, Entity *player, float dt){
+    if(*vie_tombe){
+        vie_tombante->y+=dt*vie_tombante->vy;
+        if(((vie_tombante->y<=player->y && vie_tombante->y+vie_tombante->h>=player->y) || (vie_tombante->y>=player->y && vie_tombante->y<=player->y+player->h)) && ((vie_tombante->x>=player->x && vie_tombante->x<=player->x+player->w) || (vie_tombante->x<=player->x && vie_tombante->x+vie_tombante->w>=player->x))){
+            *vie_tombe=false;
+            *vies+=1;
+        }
+        if(vie_tombante->y>=SCREEN_WIDTH)
+            *vie_tombe=false;
+    }
+    else{
+        int nbr2=rand()%5000;
+        if(nbr2==0){
+            vie_tombante->x=rand()%(SCREEN_WIDTH-VIE_WIDTH)+VIE_WIDTH;
+            vie_tombante->y=-vie_tombante->h;
+            *vie_tombe=true;
+        }
     }
 }
 
@@ -295,7 +385,7 @@ void attack_horde(Horde *horde, Entity *player, Entity *bullet_enemy, bool *bull
         *bullet_enemy_active=false;
     }
     if(!*bullet_enemy_active){
-        int nbr=rand()%30;
+        int nbr=rand()%50;
         if(nbr==0){
             int indice_tireur=rand()%(horde->Nbr_de_lignes*horde->Nbr_par_ligne);
             if(horde->existence[indice_tireur]!=0 && horde->y[indice_tireur]<=player->y-150){
@@ -315,4 +405,36 @@ void free_horde(Horde* horde){
     free(horde->y);
     free(horde->existence);
     free(horde);
+}
+
+
+void afficher_resultat(SDL_Renderer *renderer, bool victoire)
+{
+    TTF_Font *font = TTF_OpenFont("font/BitcountSingle-VariableFont_CRSV,ELSH,ELXP,slnt,wght.ttf", 48);
+    if (!font)
+        return;
+
+    SDL_Color rouge = {255, 0, 0, 255};
+    SDL_Color vert = {0, 255, 0, 255};
+
+    SDL_Surface *surface = TTF_RenderUTF8_Blended(font, "YOU LOSE", rouge);
+    if(victoire)
+        surface = TTF_RenderUTF8_Blended(font, "YOU WIN", vert);
+
+    if (!surface)
+        return;
+
+    SDL_Texture *texture = SDL_CreateTextureFromSurface(renderer, surface);
+
+    SDL_Rect dst;
+    dst.w = surface->w;
+    dst.h = surface->h;
+    dst.x = (SCREEN_WIDTH - dst.w) / 2;
+    dst.y = (SCREEN_HEIGHT - dst.h) / 2;
+
+    SDL_FreeSurface(surface);
+
+    SDL_RenderCopy(renderer, texture, NULL, &dst);
+    SDL_DestroyTexture(texture);
+    TTF_CloseFont(font);
 }
