@@ -50,7 +50,13 @@ int main(void)
 
     bool droite=true;
 
-    Horde *horde=initial_horde();
+    bool arret_durgence=false;
+
+    Horde *horde=initial_horde(&arret_durgence);
+    if(arret_durgence){
+        free_horde(horde);
+        return 0;
+    }
     
     float time=0;
     
@@ -61,7 +67,6 @@ int main(void)
     bool vie_tombe=false;
     int score=0;
     bool victoire=false;
-    bool arret_durgence=false;
 
     while (running)
     {

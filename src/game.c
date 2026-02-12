@@ -261,25 +261,32 @@ void update_horde(Horde *horde, float time, float dt, bool *droite, bool *arret_
     }
 }
 
-Horde* initial_horde(){
+Horde* initial_horde(bool *arret_durgence){
     Horde *horde=malloc(sizeof(Horde));
     horde->Nbr_de_lignes=8;
-    // if(horde==NULL) return NULL;
+    if(horde==NULL){
+        *arret_durgence=true;
+        printf("Probleme dans la création de la horde");
+        return NULL;
+    }
     horde->x=malloc(sizeof(float)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
-    // if(horde->x==NULL){
-    //     free(horde);
-    //     return NULL;
-    // }
+    if(horde->x==NULL){
+        *arret_durgence=true;
+        printf("Probleme dans la création de la horde");
+        return NULL;
+    }
     horde->y=malloc(sizeof(float)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
-    // if(horde->y==NULL){
-    //     free(horde);
-    //     return NULL;
-    // }
+    if(horde->y==NULL){
+        *arret_durgence=true;
+        printf("Probleme dans la création de la horde");
+        return NULL;
+    }
     horde->existence=malloc(sizeof(int)*ENEMIES_ON_LINE*horde->Nbr_de_lignes);
-    // if(horde->existence==NULL){
-    //     free(horde);
-    //     return NULL;
-    // }
+    if(horde->existence==NULL){
+        *arret_durgence=true;
+        printf("Probleme dans la création de la horde");
+        return NULL;
+    }
     horde->Nbr_par_ligne=ENEMIES_ON_LINE;
     horde->v=ENEMIES_SPEED_MAX;
     horde->w=ENEMIES_WIDTH;
