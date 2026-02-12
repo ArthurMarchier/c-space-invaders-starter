@@ -202,7 +202,7 @@ void cleanup(SDL_Window *window, SDL_Renderer *renderer)
 }
 
 
-void update_horde(Horde *horde, float time, float dt, bool *droite){
+void update_horde(Horde *horde, float time, float dt, bool *droite, bool *arret_durgence){
     bool newline=false;
     if(*droite){
         for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
@@ -228,25 +228,25 @@ void update_horde(Horde *horde, float time, float dt, bool *droite){
             }
         }
     }
-    // for(int i=0;i<horde->Nbr_de_lignes*horde->Nbr_par_ligne;i++){
-    //     horde->y[i]+=dt*(0.2+0.8*time/(time+20))*horde->v;
-    //}
     if(newline && horde->Nbr_de_lignes<NBR_DE_LIGNES_MAX_HORDE){
         horde->x=realloc(horde->x,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        // if(horde->x==NULL){
-        //     printf("Probleme dans la redifinition de la horde");
-        //     return NULL;
-        // }
+        if(horde->x==NULL){
+            printf("Probleme dans la redefinition de la horde");
+            *arret_durgence=true;
+            return;
+        }
         horde->y=realloc(horde->y,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(float));
-        //  if(horde->y==NULL){
-        //     printf("Probleme dans la redifinition de la horde");
-        //     return NULL;
-        // }
+         if(horde->y==NULL){
+            printf("Probleme dans la redefinition de la horde");
+            *arret_durgence=true;
+            return;
+        }
         horde->existence=realloc(horde->existence,(horde->Nbr_par_ligne*(horde->Nbr_de_lignes+1))*sizeof(int));
-        // if(horde->existence==NULL){
-        //     printf("Probleme dans la redifinition de la horde");
-        //     return NULL;
-        // }
+        if(horde->existence==NULL){
+            printf("Probleme dans la redefinition de la horde");
+            *arret_durgence=true;
+            return;
+        }
         int k=1;
         horde->Nbr_de_lignes+=1;
         if(horde->Nbr_de_lignes%5==0){

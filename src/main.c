@@ -61,6 +61,7 @@ int main(void)
     bool vie_tombe=false;
     int score=0;
     bool victoire=false;
+    bool arret_durgence=false;
 
     while (running)
     {
@@ -77,7 +78,11 @@ int main(void)
         handle_input(&running, keys, &player, &bullet, &bullet_active);
         detect_collision_enemy(&bullet, horde, &bullet_active, &score);
         update(&player, &bullet, &bullet_enemy, &bullet_enemy_active, &bullet_active, dt);
-        update_horde(horde, time, dt, &droite);
+        update_horde(horde, time, dt, &droite, &arret_durgence);
+        if(arret_durgence){
+            free_horde(horde);
+            return 0;
+        }
         attack_horde(horde, &player, &bullet_enemy, &bullet_enemy_active, &vies);
         update_fast_enemy(&fast, &fast_actif, &cote_fast, &fast_droite, &bullet_active, &bullet, dt, &vies);
         if(vies<5)

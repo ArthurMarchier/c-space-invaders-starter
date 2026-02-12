@@ -37,7 +37,7 @@ void update(Entity *player, Entity *bullet, Entity *bullet_enemy, bool *bullet_e
 void detect_collision_enemy(Entity *bullet, Horde *horde, bool *bullet_active, int *score);
 void render(SDL_Renderer *renderer, Entity *player, Entity *bullet, Horde *horde, Entity *bullet_enemy, bool bullet_active, bool bullet_enemy_active, float vies, Entity *fast, bool fast_actif, bool vie_tombe, Entity *vie_tombante);
 void cleanup(SDL_Window *window, SDL_Renderer *renderer);
-void update_horde(Horde *horde, float time, float dt, bool *droite);
+void update_horde(Horde *horde, float time, float dt, bool *droite, bool *arret_durgence);
 Horde* initial_horde();
 void update_fast_enemy(Entity *fast, bool *fast_actif, int *cote_fast, bool *fast_droite, bool *bullet_active, Entity *bullet, float dt, int *vies);
 void end_game(Horde *horde, Entity *player, bool *running, int vies, int score, bool *victoire);
