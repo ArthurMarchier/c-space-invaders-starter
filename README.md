@@ -4,7 +4,7 @@ Le but du jeu est de détruire les ennemis qui descendent sur l'écran en leur t
 
 ## Types d'ennemis
 
-- La "horde", constituée d'ennemis bleu foncé. Ces ennemis se déplacent sur le côté et descendent progressivement. Ces ennemis ont la possibilité de tirer et le joueur doit éviter leurs balles. La vitesse de la horde est légèrement progressive au cours de la partie. Certains ennemis de la horde sont plus résistants et nécessitent d'être touchés deux fois pour être éliminés (cela représente une ligne d'ennemis sur cinq). Si la horde atteint le joueur, celui-ci a perdu. La horde est constituée de 20 lignes de 8 ennemis.
+- La "horde", constituée d'ennemis bleu foncé disposés en ligne. Ces ennemis se déplacent sur le côté et descendent progressivement. Ces ennemis ont la possibilité de tirer et le joueur doit éviter leurs projectiles. La vitesse de la horde accélère au cours de la partie. Certains ennemis de la horde sont plus résistants et nécessitent d'être touchés deux fois pour être éliminés (cela représente une ligne d'ennemis sur cinq). Si la horde atteint le joueur, celui-ci a perdu. La horde est constituée de 20 lignes de 8 ennemis.
 
 - Les "ennemis rapides" qui se déplacent vers le bas et qui comme leur nom le sous-entend se déplacent plus rapidement que la horde. Ils apparaissent aléatoirement en haut de la grille et descendent vers le joueur. Si un ennemi rapide atteint le bas de l'écran, le joueur perd une vie.
 
